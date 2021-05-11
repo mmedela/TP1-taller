@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "socket.h"
+#include "common_socket.h"
 #include <errno.h>
 #include <netdb.h>
 
@@ -18,9 +18,9 @@ int client_connect(client_t* self);
 
 void client_close(client_t* self);
 
-ssize_t client_send(client_t* self, unsigned char* message,size_t msg_size);
+ssize_t client_send(client_t* self, char* message,size_t msg_size);
 
-ssize_t client_recive(client_t* self, unsigned char* msg);
+ssize_t client_recive(client_t* self, char* msg);
 
 int set_up_cliente(client_t* self, const char* puerto, const char* hostname);
 
