@@ -14,13 +14,7 @@ int socket_create(socket_t* self, struct addrinfo* ptr){
         socket_uninit(self);
         return -1;
     }
-    int peer = connect(self->fd, ptr->ai_addr, ptr->ai_addrlen);
-    if (peer == -1){
-        printf("Error de conexión de socket: %s \n", strerror(errno));
-        socket_uninit(self);
-        return -1;
-    }
-    return peer;
+    return 0;
 }
 
 void socket_uninit(socket_t* self){
@@ -33,8 +27,8 @@ void socket_uninit(socket_t* self){
     }
 }
 
-int socket_config(socket_t* self, bool serv_flag,const char* port,  const char* host, struct addrinfo** results){
-
+int socket_config(socket_t* self, bool serv_flag, const char* port,
+		const char* host, struct addrinfo** results){
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
@@ -51,11 +45,17 @@ int client_iterate_results(socket_t* self, addrinfo_t* result){
     struct addrinfo* ptr;
     bool is_connected = false;
 
-    for (ptr = result; ptr != NULL && is_connected == false; ptr = ptr->ai_next){
-        int peer = socket_create(self, ptr);
+    for (ptr=result; ptr!=NULL && is_connected==false; ptr=ptr->ai_next){
+        if (socket_create(self, ptr) < 0){
+            printf("Error de creación de socket\n");
+            return -1;
+        }
+
+        int peer = connect(self->fd, ptr->ai_addr, ptr->ai_addrlen);
         if (peer == -1) {
             continue;
         }
+        
         is_connected = (peer != -1);
    }
    return is_connected;
@@ -84,8 +84,7 @@ int connect_as_server(socket_t* self, const char* port){
         fprintf(stderr,"Error obteniendo informacion getaddrinfo.\n");
         return ERROR;
     }
-    for (ptr = results; ptr != NULL && is_connected == false; ptr = ptr->ai_next){
-
+    for (ptr=results; ptr!=NULL && is_connected==false; ptr=ptr->ai_next){
         socket_create(self, ptr);
         if (!socket_bind(self, results->ai_addr, results->ai_addrlen))
             return ERROR;
@@ -98,20 +97,19 @@ int connect_as_server(socket_t* self, const char* port){
 }
 
 int socket_connect(socket_t* self, const char* host, const char* port){
-
-    if(host) return connect_as_client(self, host, port);
-    return connect_as_server(self, port);
+    if (!host) return connect_as_server(self, port);
+    return connect_as_client(self, host, port);
 }
 
-bool socket_bind(socket_t* self, struct sockaddr* ai_addr, socklen_t ai_addrlen){
-
-    int option = 1;
-    if (setsockopt(self->fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) == -1){
-
-        fprintf(stderr,"Error setsock: %s\n",strerror(errno));
-        socket_uninit(self);
-        return false;
-    }
+bool socket_bind(socket_t* self, struct sockaddr* ai_addr,
+		socklen_t ai_addrlen){
+    // int option = 1;
+    // size_t tam = sizeof(option);
+    // if (setsockopt(self->fd,SOL_SOCKET,SO_REUSEADDR,&option,tam)==-1){
+    //     fprintf(stderr,"Error setsock: %s\n",strerror(errno));
+    //     socket_uninit(self);
+    //     return false;
+    // }
     int err = bind(self->fd, ai_addr, ai_addrlen);
     if (err == -1){
         printf("Error bind: %s \n", strerror(errno));
@@ -141,7 +139,8 @@ ssize_t socket_send(socket_t* self, char buffer[], size_t length){
     if (length == 0) return 0;
     int tot_bytes = 0;
     while (tot_bytes < length){
-        ssize_t bytes = send(self->fd, &buffer[tot_bytes], length - tot_bytes, MSG_NOSIGNAL);
+        ssize_t bytes;
+        bytes=send(self->fd,&buffer[tot_bytes],length-tot_bytes,MSG_NOSIGNAL);
         if (bytes == -1) {
             fprintf(stderr, "Error mandando mensaje: %s \n", strerror(errno));
             return -1;
@@ -158,11 +157,10 @@ ssize_t socket_receive(socket_t* self, char buffer[], size_t length){
     if (length == 0) return 0;
     ssize_t tot_bytes = 0;
     ssize_t new_bytes = 0;
-
     while (new_bytes < length){
         new_bytes = recv(self->fd, &buffer[tot_bytes], length - tot_bytes, 0);
         if (new_bytes == -1){
-            fprintf(stderr, "Error del receive new bytes: %s \n",strerror(errno));
+            fprintf(stderr, "Error del receive: %s \n",strerror(errno));
             return ERROR;
         }else if (new_bytes == 0){
             return tot_bytes;

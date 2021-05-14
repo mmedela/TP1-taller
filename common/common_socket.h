@@ -28,7 +28,8 @@ void socket_init(socket_t *self);
 
 void socket_uninit(socket_t *self);
 
-bool socket_bind(socket_t* self, struct sockaddr* ai_addr, socklen_t ai_addrlen);
+bool socket_bind(socket_t* self, 
+	struct sockaddr* ai_addr, socklen_t ai_addrlen);
 
 bool socket_listen(socket_t* self, int cant);
 
