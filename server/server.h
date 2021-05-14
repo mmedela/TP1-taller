@@ -4,6 +4,8 @@
 #include "common_socket.h"
 #include "server_encriptor.h"
 
+#define ARGC 3
+
 typedef struct server server_t;
 
 void server_init(server_t* server, const char* port);
@@ -25,7 +27,7 @@ void server_accept_client(server_t* self);
 /*Cierra el server */
 void server_close(server_t* self);
 /* Inicializa el programa al servidor recibiendo parámetros de main*/
-int program_init_server(char* pre_key, const char* port);
+int program_init_server(const char* puerto, char* pre_key);
 
 /* Corre el servidor recibiendo parámetros de main*/
 int accept_client(server_t* server, const char* port);

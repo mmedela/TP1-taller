@@ -2,7 +2,6 @@
 #define ENCRIPTOR_H_INCLUDED
 
 typedef struct encriptor{
-
     int** matriz;
     int curr_num_line_len;
     size_t lado;
@@ -11,6 +10,8 @@ typedef struct encriptor{
 void init_encriptor(char key[], encriptor_t* self);
 
 void delete_encriptor(encriptor_t* self);
+
+int get_largo_linea(encriptor_t* self);
 
 char* encriptar_linea(encriptor_t* self, char linea[]);
 
