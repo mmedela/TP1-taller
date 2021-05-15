@@ -19,7 +19,7 @@ bool server_listen(server_t* self, struct addrinfo* results);
 /* Recibe mensajes del cliente */
 ssize_t server_recv(server_t* self, char* msg[]);
 
-ssize_t server_send(server_t* self, char msg[], short int msg_size);
+ssize_t server_send(server_t* self, char msg[], short int length);
 
 /*Acepta la conexión de un cliente */
 void server_accept_client(server_t* self);

@@ -117,6 +117,7 @@ char* encriptar_linea(encriptor_t* self, char linea[]){
     size_t largo = strlen(linea), aux = 0;
     size_t resto = largo % self->lado;
     if (resto != 0) aux = largo + resto;
+    else aux = largo;
 
     int* num_line = malloc(aux*sizeof(int));
 
