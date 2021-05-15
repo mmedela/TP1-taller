@@ -23,11 +23,7 @@ int client_connect(client_t* self){
 }
 
 ssize_t client_send(client_t* self, char* msg, size_t msg_size){
-    char msg_len[3];
-    snprintf(msg_len, sizeof(msg_len), "%hi",(short int)msg_size);
-    ssize_t var = socket_send(self->skt, msg_len, 2);
-    if (var < 1) return ERROR;
-    return socket_send(self->skt, msg, msg_size);
+    return socket_send(self->skt, msg, (short int)msg_size);
 }
 
 int set_up_cliente(client_t* self, const char* puerto, const char* hostname){
@@ -37,13 +33,8 @@ int set_up_cliente(client_t* self, const char* puerto, const char* hostname){
 }
 
 ssize_t client_recive(client_t* self, char** msg){
-    char tam[2];
-    if (socket_receive(self->skt, tam, 2)<1)return ERROR;
-    short int len;
-    memcpy(&len, tam, 2);
-    *msg = realloc(*msg, (size_t)len + 1);
-    *msg[len + 1] = 0;
-    return socket_receive(self->skt, *msg, (size_t)len);
+    *msg = calloc(RESPONSE_MAX_LEN, sizeof(char));
+    return socket_receive(self->skt, *msg);
 }
 
 FILE* get_file_descriptor(const char* path){
