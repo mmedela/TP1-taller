@@ -55,7 +55,7 @@ int client_iterate_results(socket_t* self, addrinfo_t* result){
         if (peer == -1) {
             continue;
         }
-        
+
         is_connected = (peer != -1);
    }
    return is_connected;
@@ -135,9 +135,27 @@ void socket_accept(socket_t *listener, socket_t *peer){
     }
 }
 
-ssize_t socket_send(socket_t* self, char buffer[], size_t length){
+ssize_t socket_send_len(socket_t* self, short int *length){
+
+    short int tot_bytes = 0, size_len = 2;
+    while (tot_bytes < size_len){
+        ssize_t bytes;
+        bytes=send(self->fd,length,size_len-tot_bytes,MSG_NOSIGNAL);
+        if (bytes == -1) {
+            fprintf(stderr, "Error mandando largo: %s \n", strerror(errno));
+            return -1;
+        }
+        if (bytes == 0)
+            return 0;
+        else
+            tot_bytes += bytes;
+    }
+    return tot_bytes;
+}
+
+ssize_t socket_send_msg(socket_t* self, char buffer[], short int length){
     if (length == 0) return 0;
-    int tot_bytes = 0;
+    short int tot_bytes = 0;
     while (tot_bytes < length){
         ssize_t bytes;
         bytes=send(self->fd,&buffer[tot_bytes],length-tot_bytes,MSG_NOSIGNAL);
@@ -153,10 +171,34 @@ ssize_t socket_send(socket_t* self, char buffer[], size_t length){
     return tot_bytes;
 }
 
-ssize_t socket_receive(socket_t* self, char buffer[], size_t length){
+ssize_t socket_send(socket_t* self, char buffer[], short int len){
+    if(socket_send_len(self, &len) < 0) return ERROR;
+    return socket_send_msg(self, buffer, len);
+}
+
+ssize_t socket_receive_len(socket_t* self, short int *length){
+
+    short int tot_bytes = 0, len_msg = 2;
+    short int new_bytes = 0;
+    while (new_bytes < len_msg){
+        new_bytes = recv(self->fd, length, len_msg - tot_bytes, 0);
+        if (new_bytes == -1){
+            fprintf(stderr, "Error del receive length: %s \n",strerror(errno));
+            return ERROR;
+        }else if (new_bytes == 0){
+            return tot_bytes;
+        }else if (new_bytes < REQUEST_MAX_LEN){
+            return new_bytes;
+        }
+        tot_bytes += new_bytes;
+    }
+    return tot_bytes;
+}
+
+ssize_t socket_receive_msg(socket_t* self, char buffer[], short int length){
     if (length == 0) return 0;
-    ssize_t tot_bytes = 0;
-    ssize_t new_bytes = 0;
+    short int tot_bytes = 0;
+    short int new_bytes = 0;
     while (new_bytes < length){
         new_bytes = recv(self->fd, &buffer[tot_bytes], length - tot_bytes, 0);
         if (new_bytes == -1){
@@ -170,5 +212,11 @@ ssize_t socket_receive(socket_t* self, char buffer[], size_t length){
         tot_bytes += new_bytes;
     }
     return tot_bytes;
+}
+
+ssize_t socket_receive(socket_t* self, char buffer[]){
+    short int len;
+    if (socket_receive_len(self, &len) < 0) return ERROR;
+    return socket_receive_msg(self, buffer, len);
 }
 

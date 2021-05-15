@@ -28,7 +28,7 @@ void socket_init(socket_t *self);
 
 void socket_uninit(socket_t *self);
 
-bool socket_bind(socket_t* self, 
+bool socket_bind(socket_t* self,
 	struct sockaddr* ai_addr, socklen_t ai_addrlen);
 
 bool socket_listen(socket_t* self, int cant);
@@ -37,9 +37,9 @@ void socket_accept(socket_t *listener, socket_t *peer);
 
 int socket_connect(socket_t *self, const char *host, const char *service);
 
-ssize_t socket_send(socket_t* self, char buffer[], size_t length);
+ssize_t socket_send(socket_t* self, char buffer[], short int length);
 
-ssize_t socket_receive(socket_t* self, char msg[], size_t msg_size);
+ssize_t socket_receive(socket_t* self, char msg[]);
 
 
 #endif // SOCKET_H_INCLUDED
